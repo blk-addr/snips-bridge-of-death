@@ -2,7 +2,7 @@
 
 VENV=venv
 
-if [ ! -d "$VENV"]
+if [ ! -d "$VENV" ]
 then
 
 	PYTHON=`which python2`
@@ -12,6 +12,7 @@ then
 		echo "Python 2 not found"
 	fi
 
+	echo "Running virtualenv -p $PYTHON $VENV"
 	virtualenv -p $PYTHON $VENV
 fi
 
