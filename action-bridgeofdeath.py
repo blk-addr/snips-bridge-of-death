@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 import paho.mqtt.client as mqtt
 import json
 import uuid
