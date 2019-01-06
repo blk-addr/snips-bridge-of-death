@@ -29,7 +29,7 @@ INTENT_GET_COLOR = 'blk_addr:getColor'
 INTENT_GET_CAPITAL = 'blk_addr:getAssyrianCapital'
 INTENT_SPEED_OF_SWALLOW = 'blk_addr:speedOfSwallow'
 
-third_question = 0
+person_number = 0
 
 in_session = False
 
@@ -62,8 +62,25 @@ def bridge_of_death(client, userdata, msg):
 
     data = json.loads(msg.payload)
     site_id = data['siteId']
-    continue_session(msg, [INTENT_NOT_AFRAID])
-    play_wav(site_id, 'mp_stop_cross_bridge.wav')
+
+    wav_to_play = ''
+    next_intent = []
+
+    if person_number == 0 or person_number > 3:
+        wav_to_play = 'mp_stop_cross_bridge.wav'
+        next_intent.append(INTENT_NOT_AFRAID)
+    elif person_number == 1:
+        wav_to_play = 'mp_stop_approaches_bridge.wav'
+        next_intent.append(INTENT_NOT_AFRAID)
+    elif person_number == 2:
+        wav_to_play = 'mp_stop_what_is_your_name.wav'
+        next_intent.append(INTENT_GET_NAME)
+    else:
+        wav_to_play = 'mp_heh_heh_stop.wav'
+        next_intent.append(INTENT_GET_NAME)
+
+    continue_session(msg, next_intent)
+    play_wav(site_id, wav_to_play)
 
 def not_afraid(client, userdata, msg):
     if not in_session:
@@ -90,26 +107,26 @@ def get_quest(client, userdata, msg):
         end_session(msg, 'Not in bridge of death session')
         return
 
-    global third_question
+    global person_number
     data = json.loads(msg.payload)
     site_id = data['siteId']
 
     # determine which question to ask in order
-    if third_question == 0 or third_question > 3: # if this is the first run, or if we got through all
-        third_question = 0 # reset the counter
+    if person_number == 0 or person_number > 3: # if this is the first run, or if we got through all
+        person_number = 0 # reset the counter
         play_wav(site_id, 'mp_what_is_your_color.wav')
         continue_session(msg, [INTENT_GET_COLOR])
-    elif third_question == 1:
+    elif person_number == 1:
         play_wav(site_id, 'mp_what_is_capital_assyria.wav')
         continue_session(msg, [INTENT_GET_CAPITAL])
-    elif third_question == 2:
+    elif person_number == 2:
         play_wav(site_id, 'mp_what_is_your_color.wav')
         continue_session(msg, [INTENT_GET_COLOR])
     else:
         play_wav(site_id, 'mp_air_speed_swallow.wav')
         continue_session(msg, [INTENT_SPEED_OF_SWALLOW])
 
-    third_question += 1 # set the counter to the next value for the next run-thru
+    person_number += 1 # set the counter to the next value for the next run-thru
 
 def get_color(client, userdata, msg):
     if not in_session:
