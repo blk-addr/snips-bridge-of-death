@@ -19,6 +19,3 @@ fi
 . $VENV/bin/activate
 
 pip install -r requirements.txt
-
-echo "Making action executable"
-chmod +x /var/lib/snips/skills/snips-bridge-of-death/action-bridgeofdeath.py
