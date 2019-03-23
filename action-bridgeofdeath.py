@@ -9,7 +9,6 @@ HOST = 'localhost'
 PORT = 1883
 
 TOPIC_END_SESSION = 'hermes/dialogueManager/endSession'
-TOPIC_SESSION_ENDED = 'hermes/dialogueManager/sessionEnded'
 TOPIC_CONTINUE_SESSION = 'hermes/dialogueManager/continueSession'
 TOPIC_PLAY_WAV = 'hermes/audioServer/{}/playBytes/'
 
@@ -31,8 +30,6 @@ INTENT_SPEED_OF_SWALLOW = 'blk_addr:speedOfSwallow'
 
 person_number = 0
 
-in_session = False
-
 # Look at The Final Rip Off
 
 def on_connect(client, userdata, flags, rc):
@@ -44,7 +41,6 @@ def on_connect(client, userdata, flags, rc):
     mqtt_client.subscribe(TOPIC_GET_COLOR)
     mqtt_client.subscribe(TOPIC_GET_CAPITAL)
     mqtt_client.subscribe(TOPIC_SPEED_OF_SWALLOW)
-    mqtt_client.subscribe(TOPIC_SESSION_ENDED)
 
     # Set callbacks for topics
     mqtt_client.message_callback_add(TOPIC_BRIDGE_OF_DEATH, bridge_of_death)
@@ -54,12 +50,8 @@ def on_connect(client, userdata, flags, rc):
     mqtt_client.message_callback_add(TOPIC_GET_COLOR, get_color)
     mqtt_client.message_callback_add(TOPIC_GET_CAPITAL, get_capital)
     mqtt_client.message_callback_add(TOPIC_SPEED_OF_SWALLOW, speed_of_swallow)
-    mqtt_client.message_callback_add(TOPIC_SESSION_ENDED, session_ended)
 
 def bridge_of_death(client, userdata, msg):
-    global in_session
-    in_session = True
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
 
@@ -83,30 +75,18 @@ def bridge_of_death(client, userdata, msg):
     play_wav(site_id, wav_to_play)
 
 def not_afraid(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
     play_wav(site_id, 'mp_what_is_your_name.wav')
     continue_session(msg, [INTENT_GET_NAME])
 
 def get_name(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
     play_wav(site_id, 'mp_what_is_your_quest.wav')
     continue_session(msg, [INTENT_GET_QUEST])
 
 def get_quest(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     global person_number
     data = json.loads(msg.payload)
     site_id = data['siteId']
@@ -129,10 +109,6 @@ def get_quest(client, userdata, msg):
     person_number += 1 # set the counter to the next value for the next run-thru
 
 def get_color(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
     slots = data['slots']
@@ -156,10 +132,6 @@ def get_color(client, userdata, msg):
     end_session(msg, None)
 
 def get_capital(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
     slots = data['slots']
@@ -177,10 +149,6 @@ def get_capital(client, userdata, msg):
     end_session(msg, None)
 
 def speed_of_swallow(client, userdata, msg):
-    if not in_session:
-        end_session(msg, 'Not in bridge of death session')
-        return
-
     data = json.loads(msg.payload)
     site_id = data['siteId']
     slots = data['slots']
@@ -232,11 +200,6 @@ def continue_session(msg, intent_filter):
 def end_session(msg, text):
     json = get_json(msg, text)
     mqtt_client.publish(TOPIC_END_SESSION, json)
-
-def session_ended(client, userdata, msg):
-    global in_session
-    in_session = False
-    print('Set in_session False')
 
 if __name__ == '__main__':
     mqtt_client.on_connect = on_connect
